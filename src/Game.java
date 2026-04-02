@@ -5,150 +5,117 @@ import edu.princeton.cs.introcs.StdDraw;
 
 public class Game {
 
-	public static void main(String[] args) {
-		double lv = 0.005;
-		double uv = 0.01;
-		int b = 3;
-		double r = 0.025;
-		int s = 0;
-		int hs = 0;
-		double px = 0.5;
-		double py = 0.5;
-		double ps = 0.01;
-		double[] bx = new double[b];
-		double[] bY = new double[b];
-		double[] bxv = new double[b];
-		double[] bYv = new double[b];
-		
-		for(int i = 0; i < b; i++) {
-			bx[i] = Math.random();
-			bY[i] = Math.random();
-			bxv[i] = Math.random() * (uv - lv) + lv;
-			bYv[i] = Math.random() * (uv - lv) + lv;
+	private int numberOfBalls;
+	private int score;
+	private int highScore;
+	private Ball[] balls;
+	private Player player;
+	private long startTime;
+
+	public Game(int numberOfBalls) {
+		this.numberOfBalls = numberOfBalls;
+		this.score = 0;
+		this.highScore = 0;
+		this.balls = new Ball[numberOfBalls];
+		for(int i = 0; i < numberOfBalls; i++) {
+			balls[i] = new Ball();
 		}
-		
-		StdDraw.enableDoubleBuffering();
-		
-		long st = System.currentTimeMillis();
-		long dt = System.currentTimeMillis();
-		
-		while (true) {
-			
-			StdDraw.clear();
-			boolean c = false;
-			for(int i = 0; i < b; i++) {
-				
-			
-				bx[i] = bx[i] + bxv[i];
-				bY[i] = bY[i] + bYv[i];
-				if(bx[i] + r > 1 || bx[i] - r < 0) { 
-					bxv[i] = -bxv[i];
-				}
-				if(bY[i] + r > 1 || bY[i] - r < 0) { 
-					bYv[i] = -bYv[i];
-				}
-				for(int j = 0; j < b; j++) {
-					if(i != j) {
-						double d = Math.sqrt(Math.pow(bx[i] - bx[j], 2) + Math.pow(bY[i] - bY[j], 2));
-						if(d < 2 * r) {
-							bxv[i] = -bxv[i];
-							bYv[i] = -bYv[i];
-						}
-					}
-				}
-				
-				double d = Math.sqrt(Math.pow(bx[i] - px, 2) + Math.pow(bY[i] - py, 2));
-				if(d < 2 * r) {
-					c = true;
-				}
+		this.player = new Player();
+	}
+
+	public void updateBalls() {
+		for(Ball ball : balls) {
+			ball.updatePosition(balls, player);
+			if(ball.isTouchingPlayer(player)) {
+				resetGame();
+				return;
 			}
-			
-			if(c) {
-				b = 3;
-				for(int i = 0; i < b; i++) {
-					bx[i] = Math.random();
-					bY[i] = Math.random();
-					bxv[i] = Math.random() * (uv - lv) + lv;
-					bYv[i] = Math.random() * (uv - lv) + lv;
-					s = 0;
-					st = System.currentTimeMillis();
-					dt = System.currentTimeMillis();
-					px = 0.5;
-					py = 0.5;
-				}
-				
-				
-			}
-			
-			if(StdDraw.isKeyPressed(KeyEvent.VK_W)) {
-				py = py + ps;
-			}
-			if(StdDraw.isKeyPressed(KeyEvent.VK_S)) {
-				py = py - ps;
-			}
-			if(StdDraw.isKeyPressed(KeyEvent.VK_A)) {
-				px = px - ps;
-			}
-			if(StdDraw.isKeyPressed(KeyEvent.VK_D)) {
-				px = px + ps;
-			}
-			
-			if(px > 1) {
-				px = 1;
-			}
-			if(px < 0) {
-				px = 0;
-			}
-			if(py > 1) {
-				py = 1;
-			}
-			if(py < 0) {
-				py = 0;
-			}
-			
-			long now = System.currentTimeMillis();
-			if(now > st + 1000) {
-				s++;
-				if(s > hs) {
-					hs = s;
-				}
-				st = now;
-			}
-			
-			if(now > dt + 10000) {
-				b++;
-				double[] ballXnew = new double[b];
-				double[] ballYnew = new double[b];
-				double[] ballXVnew = new double[b];
-				double[] ballYVnew = new double[b];
-				for(int i = 0; i < b - 1; i++) {
-					ballXnew[i] = bx[i];
-					ballYnew[i] = bY[i];
-					ballXVnew[i] = bxv[i];
-					ballYVnew[i] = bYv[i];
-				}
-				ballXnew[b-1] = Math.random();
-				ballYnew[b-1] = Math.random();
-				ballXVnew[b-1] = Math.random() * (uv - lv) + lv;
-				ballYVnew[b-1] = Math.random() * (uv - lv) + lv;
-				bx = ballXnew;
-				bY = ballYnew;
-				bxv = ballXVnew;
-				bYv = ballYVnew;
-				dt = now;
-			}
-			StdDraw.setPenColor(Color.red);
-			for(int i = 0; i < b; i++) {
-				StdDraw.filledCircle(bx[i], bY[i], r);
-			}
-			
-			StdDraw.setPenColor(Color.black);
-			StdDraw.filledCircle(px, py, r);
-			StdDraw.text(0.5, 0.1, "Score: " + s + " High Score: " + hs);
-			
-			StdDraw.show();
-			StdDraw.pause(10);
-			
 		}
 	}
+
+	private void resetGame() {
+		this.score = 0;
+		this.player = new Player();
+		this.balls = new Ball[numberOfBalls];
+		for(int i = 0; i < numberOfBalls; i++) {
+			balls[i] = new Ball();
+		}
+	}
+
+	public void run() {
+		StdDraw.enableDoubleBuffering();
+		
+		long elapsedTime = System.currentTimeMillis();
+		long startTime = System.currentTimeMillis();
+		
+		while (true) {
+			StdDraw.clear();
+			boolean touchingPlayer = false;
+			updateBalls();
+			long now = System.currentTimeMillis();
+			updateScore(now);
+			player.move();
+			drawBalls();
+			drawPlayer();
+			StdDraw.show();
+			StdDraw.pause(10);
+		}
+
+	}
+
+	public void drawBalls() {
+		for(Ball ball : balls) {
+			ball.drawBall();
+		}
+	}
+
+	public void drawPlayer() {
+		player.drawPlayer();
+	}
+
+	public void updateScore(long now) {
+		if(now > startTime + 1000) {
+			score++;
+			if(score > highScore) {
+				highScore = score;
+			}
+			startTime = now;
+		}
+	}
+
+	public static void main(String[] args) {
+
+		Game game = new Game(3);
+		game.run();
+	}
 }
+			
+			if(now > startTime + 10000) {
+				numberOfBalls++;
+				double[] ballXnew = new double[numberOfBalls];
+				double[] ballYnew = new double[numberOfBalls];
+				double[] ballXVnew = new double[numberOfBalls];
+				double[] ballYVnew = new double[numberOfBalls];
+				for(int i = 0; i < numberOfBalls - 1; i++) {
+					ballXnew[i] = ballsX[i];
+					ballYnew[i] = ballsY[i];
+					ballXVnew[i] = ballsXVelocity[i];
+					ballYVnew[i] = ballsYVelocity[i];
+				}
+				ballXnew[numberOfBalls-1] = Math.random();
+				ballYnew[numberOfBalls-1] = Math.random();
+				ballXVnew[numberOfBalls-1] = Math.random() * (upperVelocity - lowerVelocity) + lowerVelocity;
+				ballYVnew[numberOfBalls-1] = Math.random() * (upperVelocity - lowerVelocity) + lowerVelocity;
+				ballsX = ballXnew;
+				ballsY = ballYnew;
+				ballsXVelocity = ballXVnew;
+				ballsYVelocity = ballYVnew;
+				elapsedTime = now;
+			}
+			
+			
+			
+			
+			
+		
+	
